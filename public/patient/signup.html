@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Signup - Aarogya Darpan</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Patient Signup</h1>
+                <p>Create your account</p>
+            </div>
+
+            <div id="errorMessage" class="error-message hidden"></div>
+            <div id="successMessage" class="success-message hidden"></div>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+91XXXXXXXXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" minlength="6" required>
+                    <small>Must be at least 6 characters</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-block">Sign Up</button>
+                </div>
+            </form>
+
+            <div id="otpSection" class="hidden">
+                <h3>Verify OTP</h3>
+                <p>An OTP has been sent to your phone number</p>
+                <form id="otpForm">
+                    <div class="form-group">
+                        <label for="otp">Enter OTP</label>
+                        <input type="text" id="otp" name="otp" maxlength="6" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Verify OTP</button>
+                </form>
+            </div>
+
+            <div class="auth-links">
+                <p>Already have an account? <a href="login.html">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userId = null;
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/patient/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    userId = data.userId;
+                    document.getElementById('signupForm').classList.add('hidden');
+                    document.getElementById('otpSection').classList.remove('hidden');
+                    showSuccess('OTP sent to your phone number. Check console for OTP (development mode).');
+                    console.log('OTP:', data.otp || 'Check server logs');
+                } else {
+                    // Handle both message and errors format
+                    let errorMsg = data.message || 'Signup failed';
+                    if (data.errors && data.errors.length > 0) {
+                        errorMsg = data.errors.map(e => e.msg || e.message).join(', ');
+                    }
+                    showError(errorMsg);
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError('An error occurred. Please try again. Check console for details.');
+            }
+        });
+
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const otp = document.getElementById('otp').value;
+
+            try {
+                const response = await fetch('/api/auth/patient/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, otp })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showError(data.message || 'OTP verification failed');
+                }
+            } catch (error) {
+                showError('An error occurred. Please try again.');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+

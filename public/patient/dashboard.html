@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Aarogya Darpan</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo"><img src="11.png" width="200" height="50"></div>
+            <nav class="dashboard-nav">
+                <div class="profile-button" id="profileButton">
+                    <img src="" alt="Profile" class="profile-img" id="profileImg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2740%27 fill=%27%232563eb%27/%3E%3Ctext x=%2750%27 y=%2765%27 text-anchor=%27middle%27 fill=%27white%27 font-size=%2750%27%3E👤%3C/text%3E%3C/svg%3E'">
+                </div>
+                <div class="profile-menu" id="profileMenu">
+                    <a href="profile.html">Profile</a>
+                    <a href="#" onclick="logout(); return false;">Logout</a>
+                </div>
+            </nav>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="dashboard-header-section">
+                <h1>Welcome, <span id="userName"></span></h1>
+                <div id="familyMemberSelector" class="hidden">
+                    <label>Viewing for: </label>
+                    <select id="familyMemberSelect" onchange="loadDashboard()">
+                        <option value="">Myself</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab" onclick="switchTab('prescriptions')">Prescriptions</button>
+                <button class="tab" onclick="switchTab('reports')">Medical Reports</button>
+                <button class="tab" onclick="switchTab('reminders')">Medicine Reminders</button>
+                <button class="tab" onclick="switchTab('family')">Family Members</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overviewTab" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h2>Upcoming Reminders</h2>
+                        <ul class="card-list" id="upcomingReminders">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Recent Prescriptions</h2>
+                        <ul class="card-list" id="recentPrescriptions">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Recent Reports</h2>
+                        <ul class="card-list" id="recentReports">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Notifications</h2>
+                        <ul class="card-list" id="notifications">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescriptions Tab -->
+            <div id="prescriptionsTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>All Prescriptions</h2>
+                    <div id="allPrescriptions">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reportsTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Medical Reports</h2>
+                    <div id="allReports">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminders Tab -->
+            <div id="remindersTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Medicine Reminders</h2>
+                    <div id="allReminders">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Family Members Tab -->
+            <div id="familyTab" class="tab-content">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2>Family Members</h2>
+                        <button class="btn-primary" onclick="showAddMemberModal()">Add Member</button>
+                    </div>
+                    <div id="familyMembers">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Family Member Modal -->
+    <div id="addMemberModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Family Member</h2>
+                <button class="btn-close" onclick="closeAddMemberModal()">&times;</button>
+            </div>
+            <form id="addMemberForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="memberName" required>
+                </div>
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" id="memberAge" min="1" max="150" required>
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="memberGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Relationship</label>
+                    <input type="text" id="memberRelationship" placeholder="e.g., Son, Daughter, Spouse" required>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Add Member</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <div class="chatbot-container">
+        <button class="chatbot-button" onclick="toggleChatbot()"><img src="cartoon.png" alt="Cartoon"></button>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h3>AI Chatbot</h3>
+                <button class="btn-close" onclick="toggleChatbot()" style="color: white;">&times;</button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chat-message bot">
+                    Hello! I can help you with medicine usage questions and basic report explanations. How can I assist you?
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/patient-dashboard.js"></script>
+</body>
+</html>
+

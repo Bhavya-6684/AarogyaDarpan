@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Aarogya Darpan</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo">🏥 Aarogya Darpan</div>
+            <nav class="dashboard-nav">
+                <a href="dashboard.html" class="btn-secondary">Back to Dashboard</a>
+                <div class="profile-button" id="profileButton">
+                    <img src="" alt="Profile" class="profile-img" id="profileImg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2740%27 fill=%27%232563eb%27/%3E%3Ctext x=%2750%27 y=%2765%27 text-anchor=%27middle%27 fill=%27white%27 font-size=%2750%27%3E👤%3C/text%3E%3C/svg%3E'">
+                </div>
+                <div class="profile-menu" id="profileMenu">
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="#" onclick="logout(); return false;">Logout</a>
+                </div>
+            </nav>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="dashboard-card">
+                <h2>Profile Settings</h2>
+
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <img src="" alt="Profile" id="profilePhoto" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2740%27 fill=%27%232563eb%27/%3E%3Ctext x=%2750%27 y=%2765%27 text-anchor=%27middle%27 fill=%27white%27 font-size=%2750%27%3E👤%3C/text%3E%3C/svg%3E'">
+                    <div style="margin-top: 1rem;">
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="uploadPhoto()">
+                        <button class="btn-secondary" onclick="document.getElementById('photoInput').click()">Change Photo</button>
+                    </div>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" disabled>
+                        <small>Phone number cannot be changed</small>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-block">Update Profile</button>
+                </form>
+
+                <hr style="margin: 2rem 0; border: none; border-top: 2px solid var(--border-color);">
+
+                <h3>Change Password</h3>
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPassword" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" minlength="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" minlength="6" required>
+                    </div>
+
+                    <div id="passwordError" class="error-message hidden"></div>
+
+                    <button type="submit" class="btn-primary btn-block">Change Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        requireAuth();
+
+        const user = getCurrentUser();
+        if (!user || user.role !== 'patient') {
+            window.location.href = '/patient/login.html';
+        }
+
+        // Load profile data
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await apiRequest('/auth/me');
+                if (response) {
+                    const data = await response.json();
+                    const userData = data.user;
+                    
+                    document.getElementById('name').value = userData.name || '';
+                    document.getElementById('phone').value = userData.phone || '';
+                    updateProfileImage(userData.profilePhoto);
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        });
+
+        function updateProfileImage(photoPath) {
+            const profileImg = document.getElementById('profileImg');
+            const profilePhoto = document.getElementById('profilePhoto');
+            
+            if (photoPath) {
+                const imgSrc = `/${photoPath}`;
+                profileImg.src = imgSrc;
+                profilePhoto.src = imgSrc;
+            }
+        }
+
+        // Update profile
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+
+            try {
+                const response = await apiRequest('/patient/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({ name })
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    alert('Profile updated successfully');
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error updating profile');
+                }
+            } catch (error) {
+                alert('Error updating profile');
+            }
+        });
+
+        // Upload photo
+        async function uploadPhoto() {
+            const fileInput = document.getElementById('photoInput');
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            try {
+                const token = getToken();
+                const response = await fetch('/api/patient/profile/photo', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateProfileImage(data.profilePhoto);
+                    alert('Profile photo updated successfully');
+                    
+                    // Update user in localStorage
+                    const user = getCurrentUser();
+                    user.profilePhoto = data.profilePhoto;
+                    localStorage.setItem('user', JSON.stringify(user));
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error uploading photo');
+                }
+            } catch (error) {
+                alert('Error uploading photo');
+            }
+        }
+
+        // Change password
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                const errorDiv = document.getElementById('passwordError');
+                errorDiv.textContent = 'New passwords do not match';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await apiRequest('/patient/change-password', {
+                    method: 'PUT',
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                if (response && response.ok) {
+                    alert('Password changed successfully');
+                    document.getElementById('passwordForm').reset();
+                    document.getElementById('passwordError').classList.add('hidden');
+                } else {
+                    const data = await response.json();
+                    const errorDiv = document.getElementById('passwordError');
+                    errorDiv.textContent = data.message || 'Error changing password';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('passwordError');
+                errorDiv.textContent = 'Error changing password';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Toggle profile menu
+        document.getElementById('profileButton').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('profileMenu').classList.toggle('active');
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('profileMenu').classList.remove('active');
+        });
+    </script>
+</body>
+</html>
+

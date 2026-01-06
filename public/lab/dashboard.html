@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Dashboard - Aarogya Darpan</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo"><img src="11.png" width="200" height="50"></div>
+            <nav class="dashboard-nav">
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </nav>
+        </header>
+
+        <div class="dashboard-content">
+            <h1>Welcome, <span id="labName"></span></h1>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('upload')">Upload Report</button>
+                <button class="tab" onclick="switchTab('reports')">All Reports</button>
+            </div>
+
+            <!-- Upload Report Tab -->
+            <div id="uploadTab" class="tab-content active">
+                <div class="dashboard-card">
+                    <h2>Upload Medical Report</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        Reports uploaded here will be visible to both Patient Portal and Hospital Portal
+                    </p>
+                    
+                    <form id="reportForm">
+                        <div class="form-group">
+                            <label>Hospital Name</label>
+                            <input type="text" id="hospitalName" placeholder="e.g., City General Hospital" required>
+                            <small style="color: var(--text-secondary);">Hospital where patient is registered</small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Patient Name</label>
+                                <input type="text" id="patientName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Patient Phone Number</label>
+                                <input type="tel" id="patientPhone" placeholder="+91XXXXXXXXXX" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Report Type</label>
+                                <select id="reportType" required>
+                                    <option value="">Select Report Type</option>
+                                    <option value="Blood Test">Blood Test</option>
+                                    <option value="X-Ray">X-Ray</option>
+                                    <option value="MRI">MRI</option>
+                                    <option value="CT Scan">CT Scan</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Report Name</label>
+                                <input type="text" id="reportName" placeholder="e.g., Complete Blood Count" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Report File</label>
+                            <input type="file" id="reportFile" accept="image/*,application/pdf,.doc,.docx" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description (Optional)</label>
+                            <textarea id="reportDescription" rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block">Upload Report</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- All Reports Tab -->
+            <div id="reportsTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>All Uploaded Reports</h2>
+                    <div id="reportsList">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/lab-dashboard.js"></script>
+</body>
+</html>
+

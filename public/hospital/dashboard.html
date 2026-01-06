@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Dashboard - Aarogya Darpan</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="logo"><img src="11.png" width="200" height="50"></div>
+            <nav class="dashboard-nav">
+                <button class="btn-secondary" onclick="logout()">Logout</button>
+            </nav>
+        </header>
+
+        <div class="dashboard-content">
+            <h1>Welcome, <span id="hospitalName"></span></h1>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab" onclick="switchTab('prescription')">Create Prescription</button>
+                <button class="tab" onclick="switchTab('report')">Medical Reports</button>
+                <button class="tab" onclick="switchTab('emergency')">Emergency / Admitted Patients</button>
+                <button class="tab" onclick="switchTab('patient-info')">Patient Info Access</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overviewTab" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h2>Prescriptions Created Today</h2>
+                        <div id="prescriptionsTodayCount" style="font-size: 2rem; font-weight: bold; color: var(--primary-color); text-align: center; padding: 2rem 0;">
+                            <div class="loading">Loading...</div>
+                        </div>
+                        <p style="text-align: center; color: var(--text-secondary); margin-top: 0.5rem;">Count resets daily at midnight</p>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Admitted Patients</h2>
+                        <ul class="card-list" id="admittedPatients">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Pending Consent Requests</h2>
+                        <ul class="card-list" id="pendingConsents">
+                            <li class="loading">Loading...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Prescription Tab -->
+            <div id="prescriptionTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Create Prescription</h2>
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" name="prescriptionType" value="regular" checked onchange="togglePrescriptionType()">
+                            Regular Patient (Phone + Name)
+                        </label>
+                        <label style="margin-left: 1rem;">
+                            <input type="radio" name="prescriptionType" value="emergency" onchange="togglePrescriptionType()">
+                            Emergency Patient (Bed Number)
+                        </label>
+                    </div>
+                    <form id="prescriptionForm">
+                        <div id="regularPatientFields">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Patient Name</label>
+                                    <input type="text" id="patientName">
+                                </div>
+                                <div class="form-group">
+                                    <label>Patient Phone Number</label>
+                                    <input type="tel" id="patientPhone" placeholder="+91XXXXXXXXXX">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="emergencyPatientFields" style="display: none;">
+                            <div class="form-group">
+                                <label>Select Emergency Patient</label>
+                                <select id="emergencyPatientSelect" onchange="loadEmergencyPatientName()">
+                                    <option value="">Select Emergency Patient...</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="emergencyPatientId">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Medicines</label>
+                            <div id="medicinesList"></div>
+                            <button type="button" class="btn-secondary" onclick="addMedicine()">Add Medicine</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Notes (Optional)</label>
+                            <textarea id="prescriptionNotes" rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block">Create Prescription</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Medical Reports Tab (Read-only) -->
+            <div id="reportTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Medical Reports</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        Reports uploaded by Lab Portal. Patient personal information is hidden for privacy.
+                    </p>
+                    <div id="medicalReportsList">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency / Admitted Patients Tab -->
+            <div id="emergencyTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Emergency / Admitted Patients</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        For emergency patients, only bed number is required. No personal information needed.
+                    </p>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3>Admit Emergency Patient</h3>
+                        <form id="emergencyPatientForm" style="max-width: 400px;">
+                            <div class="form-group">
+                                <label>Bed Number</label>
+                                <input type="text" id="bedNumber" placeholder="e.g., B101, ICU-3" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes (Optional)</label>
+                                <textarea id="emergencyNotes" rows="2"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Admit Emergency Patient</button>
+                        </form>
+                    </div>
+
+                    <hr style="margin: 2rem 0; border: none; border-top: 2px solid var(--border-color);">
+
+                    <div>
+                        <h3>Active Emergency Patients</h3>
+                        <div id="emergencyPatientsList">
+                            <div class="loading">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Info Access Tab -->
+            <div id="patient-infoTab" class="tab-content">
+                <div class="dashboard-card">
+                    <h2>Request Patient Info Access</h2>
+                    <form id="consentRequestForm" style="margin-bottom: 2rem;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Patient Name</label>
+                                <input type="text" id="consentPatientName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Patient Phone Number</label>
+                                <input type="tel" id="consentPatientPhone" placeholder="+91XXXXXXXXXX" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Request Access</button>
+                    </form>
+
+                    <h3>Accessible Patients</h3>
+                    <div id="accessiblePatients">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admit Patient Modal -->
+    <div id="admitModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admit Patient</h2>
+                <button class="btn-close" onclick="closeAdmitModal()">&times;</button>
+            </div>
+            <form id="admitForm">
+                <div class="form-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="admitPatientName" required>
+                </div>
+                <div class="form-group">
+                    <label>Patient Phone Number</label>
+                    <input type="tel" id="admitPatientPhone" placeholder="+91XXXXXXXXXX" required>
+                </div>
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea id="admitNotes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-block">Admit Patient</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Patient Info Modal -->
+    <div id="patientInfoModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Patient Information</h2>
+                <button class="btn-close" onclick="closePatientInfoModal()">&times;</button>
+            </div>
+            <div id="patientInfoContent">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/hospital-dashboard.js"></script>
+</body>
+</html>
+
